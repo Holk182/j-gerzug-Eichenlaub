@@ -56,7 +56,6 @@
             border: 1px solid var(--primary); 
         } 
  
-        /* Cards & Sections */ 
         .section { display: none; } 
         .section.active { display: block; } 
  
@@ -71,7 +70,6 @@
  
         .card h3 { margin-top: 0; color: #ffffff; } 
  
-        /* Forms & Inputs */ 
         input, textarea, select { 
             width: 100%; 
             padding: 12px; 
@@ -83,9 +81,7 @@
             box-sizing: border-box; 
         } 
  
-        input::placeholder, textarea::placeholder { 
-            color: var(--text-muted); 
-        } 
+        input::placeholder, textarea::placeholder { color: var(--text-muted); } 
  
         button { 
             background-color: var(--accent); 
@@ -110,11 +106,9 @@
             font-size: 0.8rem;  
         } 
  
-        /* Admin Controls */ 
         .admin-only { display: none; } 
         .is-admin .admin-only { display: block; } 
  
-        /* Navigation Bar */ 
         nav { 
             position: fixed; 
             bottom: 0; 
@@ -142,7 +136,6 @@
             border-bottom: 2px solid var(--accent); 
         } 
  
-        /* Poll options */ 
         .poll-option { 
             background: #2a2a2a; 
             padding: 10px 15px; 
@@ -159,9 +152,7 @@
             background: #333; 
         } 
  
-        .poll-option span strong { 
-            color: var(--accent); 
-        } 
+        .poll-option span strong { color: var(--accent); } 
     </style> 
 </head> 
 <body> 
@@ -176,10 +167,13 @@
     <div id="login-screen"> 
         <h2>Mitglieder Login</h2> 
         <p style="color: var(--text-muted);">Bitte gib das Zug-Passwort ein:</p> 
-        <input type="password" id="password-input" placeholder="Passwort eingeben" 
-onkeypress="handleKeyPress(event)"> 
-        <button onclick="login()">Anmelden</button> 
-        <p id="login-error" style="color: #ff4d4d; display: none;">Falsches Passwort!</p> 
+        <form id="login-form" onsubmit="return false;"> 
+            <input type="password" id="password-input" placeholder="Passwort eingeben" 
+autocomplete="current-password"> 
+            <button type="submit" id="login-btn">Anmelden</button> 
+        </form> 
+        <p id="login-error" style="color: #ff4d4d; display: none; margin-top: 10px;">Falsches 
+Passwort!</p> 
     </div> 
  
     <!-- MAIN APP CONTENT --> 
@@ -250,7 +244,6 @@ Kassierer, Schütze)">
 </nav> 
  
 <script> 
-    // --- DATEN-SPEICHER --- 
     let currentUserRole = null; 
  
     let newsData = JSON.parse(localStorage.getItem('eichenlaub_news')) || [ 
@@ -273,16 +266,22 @@ den Jägerzug Eichenlaub.' }
         { id: 3, name: 'Erich Weber', role: 'Flügelleutnant' } 
     ]; 
  
-    // --- AUTHENTIFIZIERUNG --- 
-    function handleKeyPress(e) { 
-        if (e.key === 'Enter') { 
-            login(); 
+    // Event-Listener nach dem Laden des DOMs ausführen 
+    document.addEventListener('DOMContentLoaded', function() { 
+        const loginForm = document.getElementById('login-form'); 
+        if (loginForm) { 
+            loginForm.addEventListener('submit', function(e) { 
+                e.preventDefault(); 
+                performLogin(); 
+            }); 
         } 
-    } 
+    }); 
  
-    function login() { 
-        const input = document.getElementById('password-input').value; 
-        // Vor- und nachstehende Leerzeichen entfernen & in Kleinbuchstaben umwandeln 
+    function performLogin() { 
+        const inputField = document.getElementById('password-input'); 
+        if (!inputField) return; 
+ 
+        const input = inputField.value; 
         const pw = input.trim().toLowerCase(); 
         const err = document.getElementById('login-error'); 
  
@@ -317,7 +316,6 @@ den Jägerzug Eichenlaub.' }
         renderMembers(); 
     } 
  
-    // --- NAVIGATION --- 
     function showSection(sec) { 
         document.querySelectorAll('.section').forEach(s => s.classList.remove('active')); 
         document.querySelectorAll('nav button').forEach(b => b.classList.remove('active')); 
@@ -326,7 +324,6 @@ den Jägerzug Eichenlaub.' }
         document.getElementById('nav-' + sec).classList.add('active'); 
     } 
  
-    // --- NEWS LOGIK --- 
     function renderNews() { 
         const container = document.getElementById('news-list'); 
         container.innerHTML = ''; 
@@ -359,7 +356,6 @@ onclick="deleteNews(${index})">Löschen</button>` : '';
         saveAndRender('eichenlaub_news', newsData, renderNews); 
     } 
  
-    // --- KALENDER LOGIK --- 
     function renderCalendar() { 
         const container = document.getElementById('calendar-list'); 
         container.innerHTML = ''; 
@@ -394,7 +390,6 @@ Date(item.date).toLocaleDateString('de-DE')}</span></p>
         saveAndRender('eichenlaub_cal', calendarData, renderCalendar); 
     } 
  
-    // --- UMFRAGEN LOGIK --- 
     function renderPolls() { 
         const container = document.getElementById('polls-list'); 
         container.innerHTML = ''; 
@@ -442,7 +437,6 @@ Date(item.date).toLocaleDateString('de-DE')}</span></p>
         saveAndRender('eichenlaub_polls', pollsData, renderPolls); 
     } 
  
-    // --- MITGLIEDER LOGIK --- 
     function renderMembers() { 
         const container = document.getElementById('members-list'); 
         container.innerHTML = ''; 
@@ -478,11 +472,11 @@ center;">
         membersData.splice(index, 1); 
         saveAndRender('eichenlaub_members', membersData, renderMembers); 
     } 
-// --- HELPER --- 
-function saveAndRender(key, data, renderFn) { 
-localStorage.setItem(key, JSON.stringify(data)); 
-renderFn(); 
-} 
+ 
+    function saveAndRender(key, data, renderFn) { 
+        localStorage.setItem(key, JSON.stringify(data)); 
+        renderFn(); 
+    } 
 </script> 
 </body> 
 </html> 
