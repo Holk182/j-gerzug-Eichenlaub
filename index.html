@@ -6,13 +6,13 @@
     <title>Jägerzug Eichenlaub</title> 
     <style> 
         :root { 
-            --primary: #1e7032;   /* Zug-Grün */ 
-            --accent: #ffd000;    /* Signalfarbe Gelb */ 
-            --bg: #121212;        /* Schwarz/Dunkler Hintergrund */ 
-            --card-bg: #1e1e1e;   /* Dunkelgrau für Karten */ 
-            --text-main: #ffffff; /* Weißer Text */ 
-            --text-muted: #b0b0b0;/* Grauer Text */ 
-            --input-bg: #2d2d2d;  /* Dunkle Eingabefelder */ 
+            --primary: #1e7032; 
+            --accent: #ffd000; 
+            --bg: #121212; 
+            --card-bg: #1e1e1e; 
+            --text-main: #ffffff; 
+            --text-muted: #b0b0b0; 
+            --input-bg: #2d2d2d; 
         } 
  
         body { 
@@ -45,7 +45,6 @@
             margin: 0 auto; 
         } 
  
-        /* Login Screen */ 
         #login-screen { 
             background: var(--card-bg); 
             padding: 25px; 
@@ -163,11 +162,10 @@
 </header> 
  
 <div class="container"> 
-    <!-- LOGIN SCREEN --> 
     <div id="login-screen"> 
         <h2>Mitglieder Login</h2> 
         <p style="color: var(--text-muted);">Bitte gib das Zug-Passwort ein:</p> 
-        <form id="login-form" onsubmit="return false;"> 
+        <form id="login-form" onsubmit="performLogin(); return false;"> 
             <input type="password" id="password-input" placeholder="Passwort eingeben" 
 autocomplete="current-password"> 
             <button type="submit" id="login-btn">Anmelden</button> 
@@ -176,10 +174,8 @@ autocomplete="current-password">
 Passwort!</p> 
     </div> 
  
-    <!-- MAIN APP CONTENT --> 
     <div id="app-content" style="display: none;"> 
          
-        <!-- NEWS SECTION --> 
         <div id="sec-news" class="section active"> 
             <h2>Aktuelle News</h2> 
             <div class="card admin-only" style="border-left-color: var(--accent);"> 
@@ -192,7 +188,6 @@ height:80px; margin:8px 0;"></textarea>
             <div id="news-list"></div> 
         </div> 
  
-        <!-- KALENDER SECTION --> 
         <div id="sec-calendar" class="section"> 
             <h2>Termine & Veranstaltungen</h2> 
             <div class="card admin-only" style="border-left-color: var(--accent);"> 
@@ -204,7 +199,6 @@ height:80px; margin:8px 0;"></textarea>
             <div id="calendar-list"></div> 
         </div> 
  
-        <!-- UMFRAGEN SECTION --> 
         <div id="sec-polls" class="section"> 
             <h2>Abstimmungen</h2> 
             <div class="card"> 
@@ -217,7 +211,6 @@ height:80px; margin:8px 0;"></textarea>
             <div id="polls-list"></div> 
         </div> 
  
-        <!-- MITGLIEDER SECTION --> 
         <div id="sec-members" class="section"> 
             <h2>Mitglieder & Funktionen</h2> 
             <div class="card admin-only" style="border-left-color: var(--accent);"> 
@@ -234,7 +227,6 @@ Kassierer, Schütze)">
     </div> 
 </div> 
  
-<!-- NAVIGATION --> 
 <nav id="main-nav" style="display: none;"> 
     <button id="nav-news" class="active" onclick="showSection('news')">News</button> 
     <button id="nav-calendar" onclick="showSection('calendar')">Kalender</button> 
@@ -265,17 +257,6 @@ den Jägerzug Eichenlaub.' }
         { id: 2, name: 'Peter Schmidt', role: 'Kassierer' }, 
         { id: 3, name: 'Erich Weber', role: 'Flügelleutnant' } 
     ]; 
- 
-    // Event-Listener nach dem Laden des DOMs ausführen 
-    document.addEventListener('DOMContentLoaded', function() { 
-        const loginForm = document.getElementById('login-form'); 
-        if (loginForm) { 
-            loginForm.addEventListener('submit', function(e) { 
-                e.preventDefault(); 
-                performLogin(); 
-            }); 
-        } 
-    }); 
  
     function performLogin() { 
         const inputField = document.getElementById('password-input'); 
@@ -478,5 +459,7 @@ center;">
         renderFn(); 
     } 
 </script> 
+ 
 </body> 
 </html> 
+ 
