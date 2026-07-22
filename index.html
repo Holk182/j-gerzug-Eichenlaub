@@ -45,14 +45,9 @@
             margin: 0 auto; 
         } 
  
-        /* Pure CSS Tabs ohne JS-Abhängigkeit */ 
-        input[type="radio"].tab-nav { 
-            display: none; 
-        } 
- 
-        .tab-content { 
-            display: none; 
-        } 
+        /* Tabs */ 
+        input[type="radio"].tab-nav { display: none; } 
+        .tab-content { display: none; } 
  
         #tab-news:checked ~ .container #content-news, 
         #tab-calendar:checked ~ .container #content-calendar, 
@@ -113,7 +108,7 @@
             border-radius: 6px; 
         } 
  
-        button, .btn { 
+        button { 
             background-color: var(--accent); 
             color: #000000; 
             font-weight: bold; 
@@ -124,11 +119,7 @@
             cursor: pointer; 
             margin-top: 5px; 
             font-size: 1rem; 
-            display: block; 
-            text-align: center; 
         } 
- 
-        button:active { opacity: 0.8; } 
  
         .btn-delete {  
             background-color: #d90429;  
@@ -154,7 +145,6 @@
 </head> 
 <body> 
  
-<!-- REITER STEUERUNG (Pure CSS) --> 
 <input type="radio" name="tabs" id="tab-news" class="tab-nav" checked> 
 <input type="radio" name="tabs" id="tab-calendar" class="tab-nav"> 
 <input type="radio" name="tabs" id="tab-polls" class="tab-nav"> 
@@ -174,7 +164,7 @@
             <input type="text" id="news-title" placeholder="Titel"> 
             <textarea id="news-text" placeholder="Inhalt der Nachricht..." 
 style="height:80px;"></textarea> 
-            <button type="button" id="btn-add-news">Veröffentlichen</button> 
+            <button type="button" onclick="addNews()">Veröffentlichen</button> 
         </div> 
         <div id="news-list"></div> 
     </div> 
@@ -186,7 +176,7 @@ style="height:80px;"></textarea>
             <h3 style="color: var(--accent);">Termin hinzufügen</h3> 
             <input type="text" id="event-title" placeholder="Veranstaltungsname"> 
             <input type="date" id="event-date"> 
-            <button type="button" id="btn-add-event">Termin speichern</button> 
+            <button type="button" onclick="addEvent()">Termin speichern</button> 
         </div> 
         <div id="calendar-list"></div> 
     </div> 
@@ -199,7 +189,7 @@ style="height:80px;"></textarea>
             <input type="text" id="poll-question" placeholder="Frage (z.B. Welches Bier?)"> 
             <input type="text" id="poll-opt1" placeholder="Option 1"> 
             <input type="text" id="poll-opt2" placeholder="Option 2"> 
-            <button type="button" id="btn-add-poll">Umfrage erstellen</button> 
+            <button type="button" onclick="addPoll()">Umfrage erstellen</button> 
         </div> 
         <div id="polls-list"></div> 
     </div> 
@@ -212,14 +202,13 @@ style="height:80px;"></textarea>
             <input type="text" id="member-name" placeholder="Name (z.B. Max Mustermann)"> 
             <input type="text" id="member-role" placeholder="Funktion (z.B. Zugführer, 
 Kassierer)"> 
-            <button type="button" id="btn-add-member">Mitglied speichern</button> 
+            <button type="button" onclick="addMember()">Mitglied speichern</button> 
         </div> 
         <div id="members-list"></div> 
     </div> 
  
 </div> 
  
-<!-- NAVIGATION UNTEN --> 
 <nav> 
     <label for="tab-news">News</label> 
     <label for="tab-calendar">Kalender</label> 
@@ -228,194 +217,175 @@ Kassierer)">
 </nav> 
  
 <script> 
-    window.addEventListener('DOMContentLoaded', function() { 
-        let newsData = JSON.parse(localStorage.getItem('eichenlaub_news')) || [ 
-            { id: 1, title: 'Willkommen in der App!', text: 'Hier findet ihr ab sofort alle Infos rund um 
+    // Daten laden 
+    let newsData = JSON.parse(localStorage.getItem('eichenlaub_news')) || [ 
+        { id: 1, title: 'Willkommen in der App!', text: 'Hier findet ihr ab sofort alle Infos rund um 
 den Jägerzug Eichenlaub.' } 
-        ]; 
+    ]; 
  
-        let calendarData = JSON.parse(localStorage.getItem('eichenlaub_cal')) || [ 
-            { id: 1, title: 'Zugversammlung', date: '2026-08-15' } 
-        ]; 
+    let calendarData = JSON.parse(localStorage.getItem('eichenlaub_cal')) || [ 
+        { id: 1, title: 'Zugversammlung', date: '2026-08-15' } 
+    ]; 
  
-        let pollsData = JSON.parse(localStorage.getItem('eichenlaub_polls')) || [ 
-            { id: 1, question: 'Anreise zum Schützenfest', options: [{text: 'Planwagen', votes: 0}, 
+    let pollsData = JSON.parse(localStorage.getItem('eichenlaub_polls')) || [ 
+        { id: 1, question: 'Anreise zum Schützenfest', options: [{text: 'Planwagen', votes: 0}, 
 {text: 'Zu Fuß', votes: 0}] } 
-        ]; 
+    ]; 
  
-        let membersData = JSON.parse(localStorage.getItem('eichenlaub_members')) || [ 
-            { id: 1, name: 'Hans Müller', role: 'Zugführer' }, 
-            { id: 2, name: 'Peter Schmidt', role: 'Kassierer' }, 
-            { id: 3, name: 'Erich Weber', role: 'Flügelleutnant' } 
-        ]; 
+    let membersData = JSON.parse(localStorage.getItem('eichenlaub_members')) || [ 
+        { id: 1, name: 'Hans Müller', role: 'Zugführer' }, 
+        { id: 2, name: 'Peter Schmidt', role: 'Kassierer' }, 
+        { id: 3, name: 'Erich Weber', role: 'Flügelleutnant' } 
+    ]; 
  
-        function renderAll() { 
-            renderNews(); 
-            renderCalendar(); 
-            renderPolls(); 
-            renderMembers(); 
-        } 
+    // Funktionen zum Anzeigen 
+    function renderNews() { 
+        const container = document.getElementById('news-list'); 
+        if (!container) return; 
+        container.innerHTML = ''; 
+        newsData.forEach((item, index) => { 
+            container.innerHTML += ` 
+                <div class="card"> 
+                    <h3>${item.title}</h3> 
+                    <p style="color: var(--text-muted);">${item.text}</p> 
+                    <button class="btn-delete" onclick="deleteNews(${index})">Löschen</button> 
+                </div>`; 
+        }); 
+    } 
  
-        function renderNews() { 
-            const container = document.getElementById('news-list'); 
-            if(!container) return; 
-            container.innerHTML = ''; 
-            newsData.forEach((item, index) => { 
-                container.innerHTML += ` 
-                    <div class="card"> 
-                        <h3>${item.title}</h3> 
-                        <p style="color: var(--text-muted);">${item.text}</p> 
-                        <button class="btn-delete" 
-onclick="deleteNews(${index})">Löschen</button> 
-                    </div> 
-                `; 
-            }); 
-        } 
- 
-        function renderCalendar() { 
-            const container = document.getElementById('calendar-list'); 
-            if(!container) return; 
-            container.innerHTML = ''; 
-            calendarData.sort((a,b) => new Date(a.date) - new Date(b.date)).forEach((item, 
-index) => { 
-                container.innerHTML += ` 
-                    <div class="card"> 
-                        <h3>${item.title}</h3> 
-                        <p><strong>Datum:</strong> <span style="color: 
+    function renderCalendar() { 
+        const container = document.getElementById('calendar-list'); 
+        if (!container) return; 
+        container.innerHTML = ''; 
+        calendarData.forEach((item, index) => { 
+            container.innerHTML += ` 
+                <div class="card"> 
+                    <h3>${item.title}</h3> 
+                    <p><strong>Datum:</strong> <span style="color: 
 var(--accent);">${item.date}</span></p> 
+                    <button class="btn-delete" onclick="deleteEvent(${index})">Löschen</button> 
+                </div>`; 
+        }); 
+    } 
+ 
+    function renderPolls() { 
+        const container = document.getElementById('polls-list'); 
+        if (!container) return; 
+        container.innerHTML = ''; 
+        pollsData.forEach((poll, pIndex) => { 
+            let optionsHtml = ''; 
+            poll.options.forEach((opt, oIndex) => { 
+                optionsHtml += ` 
+                    <div class="poll-option" onclick="vote(${pIndex}, ${oIndex})"> 
+                        <span>${opt.text}</span> 
+                        <span><strong>${opt.votes} Stimmen</strong></span> 
+                    </div>`; 
+            }); 
+            container.innerHTML += `<div 
+class="card"><h3>${poll.question}</h3>${optionsHtml}</div>`; 
+        }); 
+    } 
+ 
+    function renderMembers() { 
+        const container = document.getElementById('members-list'); 
+        if (!container) return; 
+        container.innerHTML = ''; 
+        membersData.forEach((member, index) => { 
+            container.innerHTML += ` 
+                <div class="card" style="display: flex; justify-content: space-between; align-items: 
+center;"> 
+                    <div> 
+                        <h3 style="margin: 0;">${member.name}</h3> 
+                        <p style="margin: 4px 0 0 0; color: var(--accent);">${member.role}</p> 
+                    </div> 
+                    <div style="width: 80px;"> 
                         <button class="btn-delete" 
-onclick="deleteEvent(${index})">Löschen</button> 
-                    </div> 
-                `; 
-            }); 
-        } 
- 
-        function renderPolls() { 
-            const container = document.getElementById('polls-list'); 
-            if(!container) return; 
-            container.innerHTML = ''; 
-            pollsData.forEach((poll, pIndex) => { 
-                let optionsHtml = ''; 
-                poll.options.forEach((opt, oIndex) => { 
-                    optionsHtml += ` 
-                        <div class="poll-option" onclick="vote(${pIndex}, ${oIndex})"> 
-                            <span>${opt.text}</span> 
-                            <span><strong>${opt.votes} Stimmen</strong></span> 
-                        </div> 
-                    `; 
-                }); 
- 
-                container.innerHTML += ` 
-                    <div class="card"> 
-                        <h3>${poll.question}</h3> 
-                        ${optionsHtml} 
-                    </div> 
-                `; 
-            }); 
-        } 
- 
-        function renderMembers() { 
-            const container = document.getElementById('members-list'); 
-            if(!container) return; 
-            container.innerHTML = ''; 
-            membersData.forEach((member, index) => { 
-                container.innerHTML += ` 
-                    <div class="card" style="display: flex; justify-content: space-between; 
-align-items: center;"> 
-                        <div> 
-                            <h3 style="margin: 0; font-size: 1.1rem;">${member.name}</h3> 
-                            <p style="margin: 4px 0 0 0; color: var(--accent); font-weight: bold; 
-font-size: 0.9rem;">${member.role}</p> 
-                        </div> 
-                        <div style="width: 80px;"> 
-                            <button class="btn-delete" 
 onclick="deleteMember(${index})">Entfernen</button> 
-                        </div> 
                     </div> 
-                `; 
-            }); 
-        } 
+                </div>`; 
+        }); 
+    } 
  
-        // Event-Listener für Buttons 
-        document.getElementById('btn-add-news').onclick = function() { 
-            const title = document.getElementById('news-title').value; 
-            const text = document.getElementById('news-text').value; 
-            if (!title || !text) return; 
-            newsData.unshift({ id: Date.now(), title, text }); 
-            localStorage.setItem('eichenlaub_news', JSON.stringify(newsData)); 
-            renderNews(); 
-            document.getElementById('news-title').value = ''; 
-            document.getElementById('news-text').value = ''; 
-        }; 
+    // Funktionen zum Hinzufügen 
+    function addNews() { 
+        const title = document.getElementById('news-title').value; 
+        const text = document.getElementById('news-text').value; 
+        if (!title || !text) return; 
+        newsData.unshift({ id: Date.now(), title, text }); 
+        localStorage.setItem('eichenlaub_news', JSON.stringify(newsData)); 
+        renderNews(); 
+        document.getElementById('news-title').value = ''; 
+        document.getElementById('news-text').value = ''; 
+    } 
  
-        document.getElementById('btn-add-event').onclick = function() { 
-            const title = document.getElementById('event-title').value; 
-            const date = document.getElementById('event-date').value; 
-            if (!title || !date) return; 
-            calendarData.push({ id: Date.now(), title, date }); 
-            localStorage.setItem('eichenlaub_cal', JSON.stringify(calendarData)); 
-            renderCalendar(); 
-            document.getElementById('event-title').value = ''; 
-            document.getElementById('event-date').value = ''; 
-        }; 
+    function deleteNews(index) { 
+        newsData.splice(index, 1); 
+        localStorage.setItem('eichenlaub_news', JSON.stringify(newsData)); 
+        renderNews(); 
+    } 
  
-        document.getElementById('btn-add-poll').onclick = function() { 
-            const q = document.getElementById('poll-question').value; 
-            const o1 = document.getElementById('poll-opt1').value; 
-            const o2 = document.getElementById('poll-opt2').value; 
-            if (!q || !o1 || !o2) return; 
-            pollsData.unshift({ 
-                id: Date.now(), 
-                question: q, 
-                options: [{ text: o1, votes: 0 }, { text: o2, votes: 0 }] 
-            }); 
-            localStorage.setItem('eichenlaub_polls', JSON.stringify(pollsData)); 
-            renderPolls(); 
-            document.getElementById('poll-question').value = ''; 
-            document.getElementById('poll-opt1').value = ''; 
-            document.getElementById('poll-opt2').value = ''; 
-        }; 
+    function addEvent() { 
+        const title = document.getElementById('event-title').value; 
+        const date = document.getElementById('event-date').value; 
+        if (!title || !date) return; 
+        calendarData.push({ id: Date.now(), title, date }); 
+        localStorage.setItem('eichenlaub_cal', JSON.stringify(calendarData)); 
+        renderCalendar(); 
+        document.getElementById('event-title').value = ''; 
+        document.getElementById('event-date').value = ''; 
+    } 
  
-        document.getElementById('btn-add-member').onclick = function() { 
-            const name = document.getElementById('member-name').value; 
-            const role = document.getElementById('member-role').value; 
-            if (!name || !role) return; 
-            membersData.push({ id: Date.now(), name, role }); 
-            localStorage.setItem('eichenlaub_members', JSON.stringify(membersData)); 
-            renderMembers(); 
-            document.getElementById('member-name').value = ''; 
-            document.getElementById('member-role').value = ''; 
-        }; 
+    function deleteEvent(index) { 
+        calendarData.splice(index, 1); 
+        localStorage.setItem('eichenlaub_cal', JSON.stringify(calendarData)); 
+        renderCalendar(); 
+    } 
  
-        // Globale Hilfsfunktionen für Inline-Clicks 
-        window.deleteNews = function(index) { 
-            newsData.splice(index, 1); 
-            localStorage.setItem('eichenlaub_news', JSON.stringify(newsData)); 
-            renderNews(); 
-        }; 
+    function addPoll() { 
+        const q = document.getElementById('poll-question').value; 
+        const o1 = document.getElementById('poll-opt1').value; 
+        const o2 = document.getElementById('poll-opt2').value; 
+        if (!q || !o1 || !o2) return; 
+        pollsData.unshift({ 
+            id: Date.now(), 
+            question: q, 
+            options: [{ text: o1, votes: 0 }, { text: o2, votes: 0 }] 
+        }); 
+        localStorage.setItem('eichenlaub_polls', JSON.stringify(pollsData)); 
+        renderPolls(); 
+        document.getElementById('poll-question').value = ''; 
+        document.getElementById('poll-opt1').value = ''; 
+        document.getElementById('poll-opt2').value = ''; 
+    } 
  
-        window.deleteEvent = function(index) { 
-            calendarData.splice(index, 1); 
-            localStorage.setItem('eichenlaub_cal', JSON.stringify(calendarData)); 
-            renderCalendar(); 
-        }; 
+    function vote(pollIndex, optionIndex) { 
+        pollsData[pollIndex].options[optionIndex].votes++; 
+        localStorage.setItem('eichenlaub_polls', JSON.stringify(pollsData)); 
+        renderPolls(); 
+    } 
  
-        window.vote = function(pollIndex, optionIndex) { 
-            pollsData[pollIndex].options[optionIndex].votes++; 
-            localStorage.setItem('eichenlaub_polls', JSON.stringify(pollsData)); 
-            renderPolls(); 
-        }; 
+    function addMember() { 
+        const name = document.getElementById('member-name').value; 
+        const role = document.getElementById('member-role').value; 
+        if (!name || !role) return; 
+        membersData.push({ id: Date.now(), name, role }); 
+        localStorage.setItem('eichenlaub_members', JSON.stringify(membersData)); 
+        renderMembers(); 
+        document.getElementById('member-name').value = ''; 
+        document.getElementById('member-role').value = ''; 
+    } 
  
-        window.deleteMember = function(index) { 
-            membersData.splice(index, 1); 
-            localStorage.setItem('eichenlaub_members', JSON.stringify(membersData)); 
-            renderMembers(); 
-        }; 
+    function deleteMember(index) { 
+        membersData.splice(index, 1); 
+        localStorage.setItem('eichenlaub_members', JSON.stringify(membersData)); 
+        renderMembers(); 
+    } 
  
-        renderAll(); 
-    }); 
+    // Beim Aufruf der Seite sofort Inhalte zeichnen 
+renderNews(); 
+renderCalendar(); 
+renderPolls(); 
+renderMembers(); 
 </script> 
- 
 </body> 
 </html> 
- 
