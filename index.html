@@ -215,24 +215,11 @@
 </nav>
 
 <script>
-    // Keine localStorage-Abhängigkeiten mehr -> Keine Browser-Blockaden mehr!
-    var newsData = [
-        { id: 1, title: 'Willkommen in der App!', text: 'Hier findet ihr ab sofort alle Infos rund um den Jägerzug Eichenlaub.' }
-    ];
-
-    var calendarData = [
-        { id: 1, title: 'Zugversammlung', date: '2026-08-15' }
-    ];
-
-    var pollsData = [
-        { id: 1, question: 'Anreise zum Schützenfest', options: [{text: 'Planwagen', votes: 0}, {text: 'Zu Fuß', votes: 0}] }
-    ];
-
-    var membersData = [
-        { id: 1, name: 'Hans Müller', role: 'Zugführer' },
-        { id: 2, name: 'Peter Schmidt', role: 'Kassierer' },
-        { id: 3, name: 'Erich Weber', role: 'Flügelleutnant' }
-    ];
+    // Alle Standard-Listen starten jetzt komplett LEER:
+    var newsData = [];
+    var calendarData = [];
+    var pollsData = [];
+    var membersData = [];
 
     function renderNews() {
         var container = document.getElementById('news-list');
@@ -359,7 +346,6 @@
         renderMembers();
     }
 
-    // Direkt nach dem Laden einmal alles Rendern
     window.onload = function() {
         renderNews();
         renderCalendar();
