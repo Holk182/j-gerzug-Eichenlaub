@@ -35,9 +35,24 @@
             position: sticky;
             top: 0;
             z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
-        header h1 { margin: 0; font-size: 1.4rem; color: #ffffff; }
+        header h1 { margin: 0; font-size: 1.2rem; color: #ffffff; }
+
+        .btn-auth {
+            background: transparent;
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            width: auto;
+            margin: 0;
+        }
 
         .container {
             padding: 15px;
@@ -141,6 +156,17 @@
         }
 
         .poll-option span strong { color: var(--accent); }
+
+        /* Für Steuerung der Sichtbarkeit je nach Rolle */
+        .admin-only {
+            display: none !important;
+        }
+        body.is-admin .admin-only {
+            display: block !important;
+        }
+        body.is-admin .admin-only-flex {
+            display: flex !important;
+        }
     </style>
 
     <!-- Firebase SDKs -->
@@ -156,6 +182,7 @@
 
 <header>
     <h1>Jägerzug Eichenlaub</h1>
+    <button id="auth-btn" class="btn-auth" onclick="toggleAdmin()">Vorstand Login</button>
 </header>
 
 <div class="container">
@@ -163,7 +190,8 @@
     <!-- NEWS -->
     <div id="content-news" class="tab-content">
         <h2>Aktuelle News</h2>
-        <div class="card" style="border-left-color: var(--accent);">
+        <!-- Nur für Vorstand sichtbar -->
+        <div class="card admin-only" style="border-left-color: var(--accent);">
             <h3 style="color: var(--accent);">News verfassen</h3>
             <input type="text" id="news-title" placeholder="Titel">
             <textarea id="news-text" placeholder="Inhalt der Nachricht..." style="height:80px;"></textarea>
@@ -175,7 +203,8 @@
     <!-- KALENDER -->
     <div id="content-calendar" class="tab-content">
         <h2>Termine & Veranstaltungen</h2>
-        <div class="card" style="border-left-color: var(--accent);">
+        <!-- Nur für Vorstand sichtbar -->
+        <div class="card admin-only" style="border-left-color: var(--accent);">
             <h3 style="color: var(--accent);">Termin hinzufügen</h3>
             <input type="text" id="event-title" placeholder="Veranstaltungsname">
             <input type="date" id="event-date">
@@ -187,7 +216,8 @@
     <!-- UMFRAGEN -->
     <div id="content-polls" class="tab-content">
         <h2>Abstimmungen</h2>
-        <div class="card">
+        <!-- Nur für Vorstand sichtbar -->
+        <div class="card admin-only">
             <h3>Neue Umfrage starten</h3>
             <input type="text" id="poll-question" placeholder="Frage (z.B. Welches Bier?)">
             <input type="text" id="poll-opt1" placeholder="Option 1 (Pflicht)">
@@ -202,7 +232,8 @@
     <!-- MITGLIEDER -->
     <div id="content-members" class="tab-content">
         <h2>Mitglieder & Funktionen</h2>
-        <div class="card" style="border-left-color: var(--accent);">
+        <!-- Nur für Vorstand sichtbar -->
+        <div class="card admin-only" style="border-left-color: var(--accent);">
             <h3 style="color: var(--accent);">Mitglied hinzufügen</h3>
             <input type="text" id="member-name" placeholder="Name (z.B. Max Mustermann)">
             <input type="text" id="member-role" placeholder="Funktion (z.B. Zugführer, Kassierer)">
@@ -221,6 +252,9 @@
 </nav>
 
 <script>
+    // VORSTANDS-PASSWORT (Hier bei Bedarf anpassen)
+    const ADMIN_PASSWORD = "eichenlaub123";
+
     // Firebase Konfiguration
     const firebaseConfig = {
       apiKey: "AIzaSyBmSrw82UEHADIbkfDH1WNRmSVCF7dkGmg",
@@ -235,8 +269,40 @@
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
+    // LOGIN SYSTEM LOGIK
+    function checkAdminStatus() {
+        const isAdmin = localStorage.getItem('eichenlaub_is_admin') === 'true';
+        if (isAdmin) {
+            document.body.classList.add('is-admin');
+            document.getElementById('auth-btn').innerText = 'Logout';
+        } else {
+            document.body.classList.remove('is-admin');
+            document.getElementById('auth-btn').innerText = 'Vorstand Login';
+        }
+    }
+
+    function toggleAdmin() {
+        const isAdmin = localStorage.getItem('eichenlaub_is_admin') === 'true';
+        if (isAdmin) {
+            localStorage.setItem('eichenlaub_is_admin', 'false');
+            alert('Erfolgreich ausgeloggt.');
+            checkAdminStatus();
+            location.reload();
+        } else {
+            const pw = prompt('Bitte Vorstands-Passwort eingeben:');
+            if (pw === ADMIN_PASSWORD) {
+                localStorage.setItem('eichenlaub_is_admin', 'true');
+                alert('Willkommen im Vorstands-Bereich!');
+                checkAdminStatus();
+                location.reload();
+            } else if (pw !== null) {
+                alert('Falsches Passwort!');
+            }
+        }
+    }
+
     // LIVE-SYNCHRONISATION
-    
+
     // News
     db.ref('news').on('value', (snapshot) => {
         const container = document.getElementById('news-list');
@@ -249,7 +315,7 @@
                     <div class="card">
                         <h3>${item.title}</h3>
                         <p style="color: var(--text-muted);">${item.text}</p>
-                        <button class="btn-delete" onclick="deleteNews('${key}')">Löschen</button>
+                        <button class="btn-delete admin-only" onclick="deleteNews('${key}')">Löschen</button>
                     </div>`;
             });
         }
@@ -267,7 +333,7 @@
                     <div class="card">
                         <h3>${item.title}</h3>
                         <p><strong>Datum:</strong> <span style="color: var(--accent);">${item.date}</span></p>
-                        <button class="btn-delete" onclick="deleteEvent('${key}')">Löschen</button>
+                        <button class="btn-delete admin-only" onclick="deleteEvent('${key}')">Löschen</button>
                     </div>`;
             });
         }
@@ -295,7 +361,7 @@
                     <div class="card">
                         <h3>${poll.question}</h3>
                         ${optionsHtml}
-                        <button class="btn-delete" onclick="deletePoll('${key}')" style="margin-top:10px;">Umfrage löschen</button>
+                        <button class="btn-delete admin-only" onclick="deletePoll('${key}')" style="margin-top:10px;">Umfrage löschen</button>
                     </div>`;
             });
         }
@@ -315,7 +381,7 @@
                             <h3 style="margin: 0;">${member.name}</h3>
                             <p style="margin: 4px 0 0 0; color: var(--accent);">${member.role}</p>
                         </div>
-                        <div style="width: 80px;">
+                        <div class="admin-only" style="width: 80px;">
                             <button class="btn-delete" onclick="deleteMember('${key}')">Entfernen</button>
                         </div>
                     </div>`;
@@ -360,7 +426,6 @@
         const o3 = document.getElementById('poll-opt3').value;
         const o4 = document.getElementById('poll-opt4').value;
 
-        // Mindestens Frage sowie Option 1 und 2 werden benötigt
         if (!q || !o1 || !o2) return;
 
         let options = [
@@ -368,7 +433,6 @@
             { text: o2, votes: 0 }
         ];
 
-        // Option 3 und 4 nur hinzufügen, wenn etwas eingetippt wurde
         if (o3.trim() !== '') options.push({ text: o3, votes: 0 });
         if (o4.trim() !== '') options.push({ text: o4, votes: 0 });
 
@@ -377,7 +441,6 @@
             options: options
         });
 
-        // Felder nach dem Speichern leeren
         document.getElementById('poll-question').value = '';
         document.getElementById('poll-opt1').value = '';
         document.getElementById('poll-opt2').value = '';
@@ -406,6 +469,11 @@
     function deleteMember(key) {
         db.ref('members/' + key).remove();
     }
+
+    // Beim Laden prüfen, ob Vorstand eingeloggt ist
+    window.onload = function() {
+        checkAdminStatus();
+    };
 </script>
 
 </body>
