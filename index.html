@@ -142,6 +142,10 @@
 
         .poll-option span strong { color: var(--accent); }
     </style>
+
+    <!-- Firebase SKDs über CDN -->
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
 <body>
 
@@ -215,166 +219,179 @@
 </nav>
 
 <script>
-    // Abgesicherter Lade- und Speicher-Mechanismus
-    function loadData(key) {
-        try {
-            var data = localStorage.getItem(key);
-            return data ? JSON.parse(data) : [];
-        } catch (e) {
-            return [];
+    // Deine Firebase Konfiguration
+    const firebaseConfig = {
+      apiKey: "AIzaSyBmSrw82UEHADIbkfDH1WNRmSVCF7dkGmg",
+      authDomain: "jaegerzug-eichenlaub.firebaseapp.com",
+      databaseURL: "https://jaegerzug-eichenlaub-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "jaegerzug-eichenlaub",
+      storageBucket: "jaegerzug-eichenlaub.firebasestorage.app",
+      messagingSenderId: "608449667276",
+      appId: "1:608449667276:web:badedf62396e71addae269"
+    };
+
+    // Firebase Initialisieren
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // LIVE-SYNCHRONISATION
+    
+    // News
+    db.ref('news').on('value', (snapshot) => {
+        const container = document.getElementById('news-list');
+        container.innerHTML = '';
+        const data = snapshot.val();
+        if (data) {
+            Object.keys(data).reverse().forEach(key => {
+                const item = data[key];
+                container.innerHTML += `
+                    <div class="card">
+                        <h3>${item.title}</h3>
+                        <p style="color: var(--text-muted);">${item.text}</p>
+                        <button class="btn-delete" onclick="deleteNews('${key}')">Löschen</button>
+                    </div>`;
+            });
         }
-    }
+    });
 
-    function saveData(key, data) {
-        try {
-            localStorage.setItem(key, JSON.stringify(data));
-        } catch (e) {}
-    }
-
-    var newsData = loadData('eichenlaub_news');
-    var calendarData = loadData('eichenlaub_cal');
-    var pollsData = loadData('eichenlaub_polls');
-    var membersData = loadData('eichenlaub_members');
-
-    function renderNews() {
-        var container = document.getElementById('news-list');
-        if (!container) return;
-        var html = '';
-        for (var i = 0; i < newsData.length; i++) {
-            html += '<div class="card">' +
-                '<h3>' + newsData[i].title + '</h3>' +
-                '<p style="color: var(--text-muted);">' + newsData[i].text + '</p>' +
-                '<button class="btn-delete" onclick="deleteNews(' + i + ')">Löschen</button>' +
-                '</div>';
+    // Kalender
+    db.ref('calendar').on('value', (snapshot) => {
+        const container = document.getElementById('calendar-list');
+        container.innerHTML = '';
+        const data = snapshot.val();
+        if (data) {
+            Object.keys(data).forEach(key => {
+                const item = data[key];
+                container.innerHTML += `
+                    <div class="card">
+                        <h3>${item.title}</h3>
+                        <p><strong>Datum:</strong> <span style="color: var(--accent);">${item.date}</span></p>
+                        <button class="btn-delete" onclick="deleteEvent('${key}')">Löschen</button>
+                    </div>`;
+            });
         }
-        container.innerHTML = html;
-    }
+    });
 
-    function renderCalendar() {
-        var container = document.getElementById('calendar-list');
-        if (!container) return;
-        var html = '';
-        for (var i = 0; i < calendarData.length; i++) {
-            html += '<div class="card">' +
-                '<h3>' + calendarData[i].title + '</h3>' +
-                '<p><strong>Datum:</strong> <span style="color: var(--accent);">' + calendarData[i].date + '</span></p>' +
-                '<button class="btn-delete" onclick="deleteEvent(' + i + ')">Löschen</button>' +
-                '</div>';
+    // Umfragen
+    db.ref('polls').on('value', (snapshot) => {
+        const container = document.getElementById('polls-list');
+        container.innerHTML = '';
+        const data = snapshot.val();
+        if (data) {
+            Object.keys(data).forEach(key => {
+                const poll = data[key];
+                let optionsHtml = '';
+                if(poll.options) {
+                    poll.options.forEach((opt, oIndex) => {
+                        optionsHtml += `
+                            <div class="poll-option" onclick="vote('${key}', ${oIndex}, ${opt.votes || 0})">
+                                <span>${opt.text}</span>
+                                <span><strong>${opt.votes || 0} Stimmen</strong></span>
+                            </div>`;
+                    });
+                }
+                container.innerHTML += `
+                    <div class="card">
+                        <h3>${poll.question}</h3>
+                        ${optionsHtml}
+                        <button class="btn-delete" onclick="deletePoll('${key}')" style="margin-top:10px;">Umfrage löschen</button>
+                    </div>`;
+            });
         }
-        container.innerHTML = html;
-    }
+    });
 
-    function renderPolls() {
-        var container = document.getElementById('polls-list');
-        if (!container) return;
-        var html = '';
-        for (var p = 0; p < pollsData.length; p++) {
-            var optionsHtml = '';
-            for (var o = 0; o < pollsData[p].options.length; o++) {
-                optionsHtml += '<div class="poll-option" onclick="vote(' + p + ',' + o + ')">' +
-                    '<span>' + pollsData[p].options[o].text + '</span>' +
-                    '<span><strong>' + pollsData[p].options[o].votes + ' Stimmen</strong></span>' +
-                    '</div>';
-            }
-            html += '<div class="card"><h3>' + pollsData[p].question + '</h3>' + optionsHtml + '</div>';
+    // Mitglieder
+    db.ref('members').on('value', (snapshot) => {
+        const container = document.getElementById('members-list');
+        container.innerHTML = '';
+        const data = snapshot.val();
+        if (data) {
+            Object.keys(data).forEach(key => {
+                const member = data[key];
+                container.innerHTML += `
+                    <div class="card" style="display: flex; justify-content: space-between; align-items: center;">
+                        <div>
+                            <h3 style="margin: 0;">${member.name}</h3>
+                            <p style="margin: 4px 0 0 0; color: var(--accent);">${member.role}</p>
+                        </div>
+                        <div style="width: 80px;">
+                            <button class="btn-delete" onclick="deleteMember('${key}')">Entfernen</button>
+                        </div>
+                    </div>`;
+            });
         }
-        container.innerHTML = html;
-    }
+    });
 
-    function renderMembers() {
-        var container = document.getElementById('members-list');
-        if (!container) return;
-        var html = '';
-        for (var i = 0; i < membersData.length; i++) {
-            html += '<div class="card" style="display: flex; justify-content: space-between; align-items: center;">' +
-                '<div><h3 style="margin: 0;">' + membersData[i].name + '</h3>' +
-                '<p style="margin: 4px 0 0 0; color: var(--accent);">' + membersData[i].role + '</p></div>' +
-                '<div style="width: 80px;"><button class="btn-delete" onclick="deleteMember(' + i + ')">Entfernen</button></div>' +
-                '</div>';
-        }
-        container.innerHTML = html;
-    }
+    // SCHREIB-FUNKTIONEN (Senden an die Datenbank)
 
     function addNews() {
-        var title = document.getElementById('news-title').value;
-        var text = document.getElementById('news-text').value;
+        const title = document.getElementById('news-title').value;
+        const text = document.getElementById('news-text').value;
         if (!title || !text) return;
-        newsData.unshift({ id: Date.now(), title: title, text: text });
-        saveData('eichenlaub_news', newsData);
-        renderNews();
+
+        db.ref('news').push({ title, text, timestamp: Date.now() });
         document.getElementById('news-title').value = '';
         document.getElementById('news-text').value = '';
     }
 
-    function deleteNews(index) {
-        newsData.splice(index, 1);
-        saveData('eichenlaub_news', newsData);
-        renderNews();
+    function deleteNews(key) {
+        db.ref('news/' + key).remove();
     }
 
     function addEvent() {
-        var title = document.getElementById('event-title').value;
-        var date = document.getElementById('event-date').value;
+        const title = document.getElementById('event-title').value;
+        const date = document.getElementById('event-date').value;
         if (!title || !date) return;
-        calendarData.push({ id: Date.now(), title: title, date: date });
-        saveData('eichenlaub_cal', calendarData);
-        renderCalendar();
+
+        db.ref('calendar').push({ title, date });
         document.getElementById('event-title').value = '';
         document.getElementById('event-date').value = '';
     }
 
-    function deleteEvent(index) {
-        calendarData.splice(index, 1);
-        saveData('eichenlaub_cal', calendarData);
-        renderCalendar();
+    function deleteEvent(key) {
+        db.ref('calendar/' + key).remove();
     }
 
     function addPoll() {
-        var q = document.getElementById('poll-question').value;
-        var o1 = document.getElementById('poll-opt1').value;
-        var o2 = document.getElementById('poll-opt2').value;
+        const q = document.getElementById('poll-question').value;
+        const o1 = document.getElementById('poll-opt1').value;
+        const o2 = document.getElementById('poll-opt2').value;
         if (!q || !o1 || !o2) return;
-        pollsData.unshift({
-            id: Date.now(),
+
+        db.ref('polls').push({
             question: q,
-            options: [{ text: o1, votes: 0 }, { text: o2, votes: 0 }]
+            options: [
+                { text: o1, votes: 0 },
+                { text: o2, votes: 0 }
+            ]
         });
-        saveData('eichenlaub_polls', pollsData);
-        renderPolls();
+
         document.getElementById('poll-question').value = '';
         document.getElementById('poll-opt1').value = '';
         document.getElementById('poll-opt2').value = '';
     }
 
-    function vote(pollIndex, optionIndex) {
-        pollsData[pollIndex].options[optionIndex].votes++;
-        saveData('eichenlaub_polls', pollsData);
-        renderPolls();
+    function vote(pollKey, optionIndex, currentVotes) {
+        db.ref(`polls/${pollKey}/options/${optionIndex}/votes`).set(currentVotes + 1);
+    }
+
+    function deletePoll(key) {
+        db.ref('polls/' + key).remove();
     }
 
     function addMember() {
-        var name = document.getElementById('member-name').value;
-        var role = document.getElementById('member-role').value;
+        const name = document.getElementById('member-name').value;
+        const role = document.getElementById('member-role').value;
         if (!name || !role) return;
-        membersData.push({ id: Date.now(), name: name, role: role });
-        saveData('eichenlaub_members', membersData);
-        renderMembers();
+
+        db.ref('members').push({ name, role });
         document.getElementById('member-name').value = '';
         document.getElementById('member-role').value = '';
     }
 
-    function deleteMember(index) {
-        membersData.splice(index, 1);
-        saveData('eichenlaub_members', membersData);
-        renderMembers();
+    function deleteMember(key) {
+        db.ref('members/' + key).remove();
     }
-
-    window.onload = function() {
-        renderNews();
-        renderCalendar();
-        renderPolls();
-        renderMembers();
-    };
 </script>
 
 </body>
