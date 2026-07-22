@@ -176,7 +176,8 @@
     <div id="login-screen"> 
         <h2>Mitglieder Login</h2> 
         <p style="color: var(--text-muted);">Bitte gib das Zug-Passwort ein:</p> 
-        <input type="password" id="password-input" placeholder="Passwort eingeben"> 
+        <input type="password" id="password-input" placeholder="Passwort eingeben" 
+onkeypress="handleKeyPress(event)"> 
         <button onclick="login()">Anmelden</button> 
         <p id="login-error" style="color: #ff4d4d; display: none;">Falsches Passwort!</p> 
     </div> 
@@ -273,17 +274,27 @@ den Jägerzug Eichenlaub.' }
     ]; 
  
     // --- AUTHENTIFIZIERUNG --- 
+    function handleKeyPress(e) { 
+        if (e.key === 'Enter') { 
+            login(); 
+        } 
+    } 
+ 
     function login() { 
-        const pw = document.getElementById('password-input').value; 
+        const input = document.getElementById('password-input').value; 
+        // Vor- und nachstehende Leerzeichen entfernen & in Kleinbuchstaben umwandeln 
+        const pw = input.trim().toLowerCase(); 
         const err = document.getElementById('login-error'); 
  
-        if (pw === 'Vorstand2007') { 
+        if (pw === 'vorstand2007') { 
             currentUserRole = 'board'; 
             document.body.classList.add('is-admin'); 
+            err.style.display = 'none'; 
             initApp('Vorstand eingeloggt'); 
-        } else if (pw === 'Eichenlaub2007') { 
+        } else if (pw === 'eichenlaub2007') { 
             currentUserRole = 'member'; 
             document.body.classList.remove('is-admin'); 
+            err.style.display = 'none'; 
             initApp('Mitglied eingeloggt'); 
         } else { 
             err.style.display = 'block'; 
@@ -467,14 +478,11 @@ center;">
         membersData.splice(index, 1); 
         saveAndRender('eichenlaub_members', membersData, renderMembers); 
     } 
- 
-    // --- HELPER --- 
-    function saveAndRender(key, data, renderFn) { 
-        localStorage.setItem(key, JSON.stringify(data)); 
-        renderFn(); 
-    } 
+// --- HELPER --- 
+function saveAndRender(key, data, renderFn) { 
+localStorage.setItem(key, JSON.stringify(data)); 
+renderFn(); 
+} 
 </script> 
- 
 </body> 
 </html> 
- 
