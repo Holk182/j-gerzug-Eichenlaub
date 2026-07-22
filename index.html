@@ -215,11 +215,26 @@
 </nav>
 
 <script>
-    // Alle Standard-Listen starten jetzt komplett LEER:
-    var newsData = [];
-    var calendarData = [];
-    var pollsData = [];
-    var membersData = [];
+    // Abgesicherter Lade- und Speicher-Mechanismus
+    function loadData(key) {
+        try {
+            var data = localStorage.getItem(key);
+            return data ? JSON.parse(data) : [];
+        } catch (e) {
+            return [];
+        }
+    }
+
+    function saveData(key, data) {
+        try {
+            localStorage.setItem(key, JSON.stringify(data));
+        } catch (e) {}
+    }
+
+    var newsData = loadData('eichenlaub_news');
+    var calendarData = loadData('eichenlaub_cal');
+    var pollsData = loadData('eichenlaub_polls');
+    var membersData = loadData('eichenlaub_members');
 
     function renderNews() {
         var container = document.getElementById('news-list');
@@ -285,6 +300,7 @@
         var text = document.getElementById('news-text').value;
         if (!title || !text) return;
         newsData.unshift({ id: Date.now(), title: title, text: text });
+        saveData('eichenlaub_news', newsData);
         renderNews();
         document.getElementById('news-title').value = '';
         document.getElementById('news-text').value = '';
@@ -292,6 +308,7 @@
 
     function deleteNews(index) {
         newsData.splice(index, 1);
+        saveData('eichenlaub_news', newsData);
         renderNews();
     }
 
@@ -300,6 +317,7 @@
         var date = document.getElementById('event-date').value;
         if (!title || !date) return;
         calendarData.push({ id: Date.now(), title: title, date: date });
+        saveData('eichenlaub_cal', calendarData);
         renderCalendar();
         document.getElementById('event-title').value = '';
         document.getElementById('event-date').value = '';
@@ -307,6 +325,7 @@
 
     function deleteEvent(index) {
         calendarData.splice(index, 1);
+        saveData('eichenlaub_cal', calendarData);
         renderCalendar();
     }
 
@@ -320,6 +339,7 @@
             question: q,
             options: [{ text: o1, votes: 0 }, { text: o2, votes: 0 }]
         });
+        saveData('eichenlaub_polls', pollsData);
         renderPolls();
         document.getElementById('poll-question').value = '';
         document.getElementById('poll-opt1').value = '';
@@ -328,6 +348,7 @@
 
     function vote(pollIndex, optionIndex) {
         pollsData[pollIndex].options[optionIndex].votes++;
+        saveData('eichenlaub_polls', pollsData);
         renderPolls();
     }
 
@@ -336,6 +357,7 @@
         var role = document.getElementById('member-role').value;
         if (!name || !role) return;
         membersData.push({ id: Date.now(), name: name, role: role });
+        saveData('eichenlaub_members', membersData);
         renderMembers();
         document.getElementById('member-name').value = '';
         document.getElementById('member-role').value = '';
@@ -343,6 +365,7 @@
 
     function deleteMember(index) {
         membersData.splice(index, 1);
+        saveData('eichenlaub_members', membersData);
         renderMembers();
     }
 
