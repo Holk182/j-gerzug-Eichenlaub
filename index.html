@@ -143,7 +143,7 @@
         .poll-option span strong { color: var(--accent); }
     </style>
 
-    <!-- Firebase SKDs über CDN -->
+    <!-- Firebase SDKs -->
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
 </head>
@@ -190,8 +190,10 @@
         <div class="card">
             <h3>Neue Umfrage starten</h3>
             <input type="text" id="poll-question" placeholder="Frage (z.B. Welches Bier?)">
-            <input type="text" id="poll-opt1" placeholder="Option 1">
-            <input type="text" id="poll-opt2" placeholder="Option 2">
+            <input type="text" id="poll-opt1" placeholder="Option 1 (Pflicht)">
+            <input type="text" id="poll-opt2" placeholder="Option 2 (Pflicht)">
+            <input type="text" id="poll-opt3" placeholder="Option 3 (Optional)">
+            <input type="text" id="poll-opt4" placeholder="Option 4 (Optional)">
             <button type="button" onclick="addPoll()">Umfrage erstellen</button>
         </div>
         <div id="polls-list"></div>
@@ -219,7 +221,7 @@
 </nav>
 
 <script>
-    // Deine Firebase Konfiguration
+    // Firebase Konfiguration
     const firebaseConfig = {
       apiKey: "AIzaSyBmSrw82UEHADIbkfDH1WNRmSVCF7dkGmg",
       authDomain: "jaegerzug-eichenlaub.firebaseapp.com",
@@ -230,7 +232,6 @@
       appId: "1:608449667276:web:badedf62396e71addae269"
     };
 
-    // Firebase Initialisieren
     firebase.initializeApp(firebaseConfig);
     const db = firebase.database();
 
@@ -322,7 +323,7 @@
         }
     });
 
-    // SCHREIB-FUNKTIONEN (Senden an die Datenbank)
+    // SCHREIB-FUNKTIONEN
 
     function addNews() {
         const title = document.getElementById('news-title').value;
@@ -356,19 +357,32 @@
         const q = document.getElementById('poll-question').value;
         const o1 = document.getElementById('poll-opt1').value;
         const o2 = document.getElementById('poll-opt2').value;
+        const o3 = document.getElementById('poll-opt3').value;
+        const o4 = document.getElementById('poll-opt4').value;
+
+        // Mindestens Frage sowie Option 1 und 2 werden benötigt
         if (!q || !o1 || !o2) return;
+
+        let options = [
+            { text: o1, votes: 0 },
+            { text: o2, votes: 0 }
+        ];
+
+        // Option 3 und 4 nur hinzufügen, wenn etwas eingetippt wurde
+        if (o3.trim() !== '') options.push({ text: o3, votes: 0 });
+        if (o4.trim() !== '') options.push({ text: o4, votes: 0 });
 
         db.ref('polls').push({
             question: q,
-            options: [
-                { text: o1, votes: 0 },
-                { text: o2, votes: 0 }
-            ]
+            options: options
         });
 
+        // Felder nach dem Speichern leeren
         document.getElementById('poll-question').value = '';
         document.getElementById('poll-opt1').value = '';
         document.getElementById('poll-opt2').value = '';
+        document.getElementById('poll-opt3').value = '';
+        document.getElementById('poll-opt4').value = '';
     }
 
     function vote(pollKey, optionIndex, currentVotes) {
